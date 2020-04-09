@@ -1,0 +1,9 @@
+grub/
+gnulib/
+src/
+pkg/
+grub-extras/
+
+unifont-*
+*.tar
+*.tar.*
