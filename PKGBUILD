@@ -9,8 +9,8 @@ _IA32_EFI_IN_ARCH_X64="1"
 ## "1" to enable EMU build, "0" to disable
 _GRUB_EMU_BUILD="0"
 
+_GRUB_REDHAT_COMMIT="04fa66c546b7ed6e93671e8155b52973f4239150"
 _GRUB_EXTRAS_COMMIT="8a245d5c1800627af4cefa99162a89c7a46d8842"
-_GNULIB_COMMIT="be584c56eb1311606e5ea1a36363b97bddb6eed3"
 _UNIFONT_VER="12.1.03"
 
 [[ "${CARCH}" == "x86_64" ]] && _EFI_ARCH="x86_64"
@@ -19,8 +19,8 @@ _UNIFONT_VER="12.1.03"
 [[ "${CARCH}" == "x86_64" ]] && _EMU_ARCH="x86_64"
 [[ "${CARCH}" == "i686" ]] && _EMU_ARCH="i386"
 
-pkgname='grub'
-pkgdesc='GNU GRand Unified Bootloader (2)'
+pkgname='grub-redhat'
+pkgdesc='GNU GRand Unified Bootloader (2) with RedHat patches'
 _pkgver=2.04
 pkgver=${_pkgver/-/}
 pkgrel=5
@@ -30,12 +30,12 @@ arch=('x86_64')
 license=('GPL3')
 backup=('etc/default/grub'
         'etc/grub.d/40_custom')
-install="${pkgname}.install"
+install="grub.install"
 options=('!makeflags')
 
-conflicts=('grub-common' 'grub-bios' 'grub-emu' "grub-efi-${_EFI_ARCH}" 'grub-legacy')
-replaces=('grub-common' 'grub-bios' 'grub-emu' "grub-efi-${_EFI_ARCH}")
-provides=('grub-common' 'grub-bios' 'grub-emu' "grub-efi-${_EFI_ARCH}")
+conflicts=('grub' 'grub-common' 'grub-bios' 'grub-emu' "grub-efi-${_EFI_ARCH}" 'grub-legacy')
+replaces=('grub' 'grub-common' 'grub-bios' 'grub-emu' "grub-efi-${_EFI_ARCH}")
+provides=('grub' 'grub-common' 'grub-bios' 'grub-emu' "grub-efi-${_EFI_ARCH}")
 
 makedepends=('git' 'rsync' 'xz' 'freetype2' 'ttf-dejavu' 'python' 'autogen'
              'texinfo' 'help2man' 'gettext' 'device-mapper' 'fuse2')
@@ -58,12 +58,15 @@ validpgpkeys=('E53D497F3FA42AD8C9B4D1E835A93B74E82E4209'  # Vladimir 'phcoder' S
               'BE5C23209ACDDACEB20DB0A28C8189F1988C2166'  # Daniel Kiper <dkiper@net-space.pl>
               '95D2E9AB8740D8046387FD151A09227B1F435A33') # Paul Hardy <unifoundry@unifoundry.com>
 
-source=("git+https://git.savannah.gnu.org/git/grub.git#tag=grub-${_pkgver}?signed"
+source=("grub::git+https://github.com/rhboot/grub2.git#commit=${_GRUB_REDHAT_COMMIT}"
         "git+https://git.savannah.gnu.org/git/grub-extras.git#commit=${_GRUB_EXTRAS_COMMIT}"
-        "git+https://git.savannah.gnu.org/git/gnulib.git#commit=${_GNULIB_COMMIT}"
-        "https://ftp.gnu.org/gnu/unifont/unifont-${_UNIFONT_VER}/unifont-${_UNIFONT_VER}.bdf.gz"{,.sig}
+        "git+https://github.com/rhboot/gnulib.git#branch=fixes"
+	"https://ftp.gnu.org/gnu/unifont/unifont-${_UNIFONT_VER}/unifont-${_UNIFONT_VER}.bdf.gz"{,.sig}
         '0003-10_linux-detect-archlinux-initramfs.patch'
         '0004-add-GRUB_COLOR_variables.patch'
+	'9997-Remove-redhat-specific-settings.patch'
+	'9998-Fix_disabling_gnus-rpm-sort.patch'
+	'9999-grub-mkconfig-Use-portable-command-v-to-detect-insta.patch'
         'grub.default')
 
 sha256sums=('SKIP'
@@ -71,14 +74,12 @@ sha256sums=('SKIP'
             'SKIP'
             '6067bda8daa1f3c49d8876107992e19fc9ab905ad54c01c3131b9649977c3746'
             'SKIP'
-            '171415ab075d1ac806f36c454feeb060f870416f24279b70104bba94bd6076d4'
-            'a5198267ceb04dceb6d2ea7800281a42b3f91fd02da55d2cc9ea20d47273ca29'
-            '690adb7943ee9fedff578a9d482233925ca3ad3e5a50fffddd27cf33300a89e3')
-
-_backports=(
-	# grub-mkconfig: Use portable "command -v" to detect installed programs
-	'28a7e597de0d5584f65e36f9588ff9041936e617'
-)
+            'a9b5a81e04e52be7afabed2095d3a90dc821edcba962e53d6d0946213fa32a7c'
+            'b1ed6826e1cbf9382557df00aa7b1397cd83d82895ed2e88f3778322e98b7059'
+	    'd097165b023b8ca266218c37c67547280c1a6331f13b5e91e900b27a13f870fc'
+	    '348c06275d2695b1e1e6d1a055d899c7843bad451d67dacda0afe289eab96766'
+	    '7c076eb9a5c205e6263522516778b22a85a021b2811c79cbef7152d0ae933013'
+	    '690adb7943ee9fedff578a9d482233925ca3ad3e5a50fffddd27cf33300a89e3')
 
 _configure_options=(
 	FREETYPE="pkg-config freetype2"
@@ -101,17 +102,18 @@ _configure_options=(
 	--with-grubdir="grub"
 	--disable-silent-rules
 	--disable-werror
+	--disable-rpm-sort
 )
 
 prepare() {
-	cd "${srcdir}/grub/"
+	cd "${srcdir}/gnulib/"
 
-	echo "Apply backports..."
-	local _c
-	for _c in "${_backports[@]}"; do
-		git log --oneline -1 "${_c}"
-		git cherry-pick -n "${_c}"
-	done
+	rm -rf .git
+
+	echo "Patch to remove redhat specific settings"
+	patch -Np1 -i "${srcdir}/9997-Remove-redhat-specific-settings.patch"
+
+	cd "${srcdir}/grub/"
 
 	echo "Patch to detect of Arch Linux initramfs images by grub-mkconfig..."
 	patch -Np1 -i "${srcdir}/0003-10_linux-detect-archlinux-initramfs.patch"
@@ -119,6 +121,12 @@ prepare() {
 	echo "Patch to enable GRUB_COLOR_* variables in grub-mkconfig..."
 	## Based on http://lists.gnu.org/archive/html/grub-devel/2012-02/msg00021.html
 	patch -Np1 -i "${srcdir}/0004-add-GRUB_COLOR_variables.patch"
+
+	echo "Patch to fix disabling grub-rpm-sort"
+	patch -Np1 -i "${srcdir}/9998-Fix_disabling_gnus-rpm-sort.patch"
+
+	echo "Patch to use portable 'command -v' to detect installed programs"
+	patch -Np1 -i "${srcdir}/9999-grub-mkconfig-Use-portable-command-v-to-detect-insta.patch"
 
 	echo "Fix DejaVuSans.ttf location so that grub-mkfont can create *.pf2 files for starfield theme..."
 	sed 's|/usr/share/fonts/dejavu|/usr/share/fonts/dejavu /usr/share/fonts/TTF|g' -i "configure.ac"
@@ -129,9 +137,6 @@ prepare() {
 	echo "Fix OS naming FS#33393..."
 	sed 's|GNU/Linux|Linux|' -i "util/grub.d/10_linux.in"
 
-	echo "Pull in latest language files..."
-	./linguas.sh
-
 	echo "Avoid problem with unifont during compile of grub..."
 	# http://savannah.gnu.org/bugs/?40330 and https://bugs.archlinux.org/task/37847
 	gzip -cd "${srcdir}/unifont-${_UNIFONT_VER}.bdf.gz" > "unifont.bdf"
@@ -140,9 +145,6 @@ prepare() {
 	./bootstrap \
 		--gnulib-srcdir="${srcdir}/gnulib/" \
 		--no-git
-
-	echo "Make translations reproducible..."
-	sed -i '1i /^PO-Revision-Date:/ d' po/*.sed
 }
 
 _build_grub-common_and_bios() {
@@ -173,6 +175,7 @@ _build_grub-common_and_bios() {
 	echo "Run ./configure for bios build..."
 	./configure \
 		--with-platform="pc" \
+		--with-utils="host" \
 		--target="i386" \
 		"${_EFIEMU}" \
 		--enable-boot-time \
@@ -202,6 +205,7 @@ _build_grub-efi() {
 	echo "Run ./configure for ${_EFI_ARCH} efi build..."
 	./configure \
 		--with-platform="efi" \
+		--with-utils="host" \
 		--target="${_EFI_ARCH}" \
 		--disable-efiemu \
 		--enable-boot-time \

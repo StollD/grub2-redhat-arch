@@ -1,0 +1,50 @@
+From 893e8fa882f036a43d13c94c924a7c995447233f Mon Sep 17 00:00:00 2001
+From: Tim Landscheidt <tim@tim-landscheidt.de>
+Date: Thu, 29 Nov 2018 19:26:01 +0000
+Subject: [PATCH] Fix disabling gnus-rpm-sort
+
+Currently, grub-rpm-sort is unconditionally compiled whether
+./configure has been called with --disable-rpm-sort or not.  This adds
+the necessary logic to configure.ac and Makefile.util.def and some
+debug output to ./configure and fixes #44.
+---
+ Makefile.util.def | 1 +
+ configure.ac      | 6 ++++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/Makefile.util.def b/Makefile.util.def
+index c8cb91308..791e814fa 100644
+--- a/Makefile.util.def
++++ b/Makefile.util.def
+@@ -731,6 +731,7 @@ program = {
+   ldadd = grub-core/gnulib/libgnu.a;
+   ldadd = libgrubkern.a;
+   ldadd = '$(LIBDEVMAPPER) $(LIBRPM)';
++  condition = COND_GRUB_RPM_SORT;
+ };
+
+ script = {
+diff --git a/configure.ac b/configure.ac
+index 61c4683cb..8a704f384 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2094,6 +2094,7 @@ AM_CONDITIONAL([COND_GRUB_EMU_SDL], [test x$enable_grub_emu_sdl = xyes])
+ AM_CONDITIONAL([COND_GRUB_EMU_PCI], [test x$enable_grub_emu_pci = xyes])
+ AM_CONDITIONAL([COND_GRUB_MKFONT], [test x$enable_grub_mkfont = xyes])
+ AM_CONDITIONAL([COND_GRUB_MOUNT], [test x$enable_grub_mount = xyes])
++AM_CONDITIONAL([COND_GRUB_RPM_SORT], [test x$enable_rpm_sort = xyes])
+ AM_CONDITIONAL([COND_HAVE_FONT_SOURCE], [test x$FONT_SOURCE != x])
+ if test x$FONT_SOURCE != x ; then
+    HAVE_FONT_SOURCE=1
+@@ -2215,6 +2216,11 @@ echo grub-mount: Yes
+ else
+ echo grub-mount: No "($grub_mount_excuse)"
+ fi
++if [ x"$rpm_sort_excuse" = x ]; then
++echo grub-rpm-sort: Yes
++else
++echo grub-rpm-sort: No "($rpm_sort_excuse)"
++fi
+ if [ x"$starfield_excuse" = x ]; then
+ echo starfield theme: Yes
+ echo With DejaVuSans font from $DJVU_FONT_SOURCE

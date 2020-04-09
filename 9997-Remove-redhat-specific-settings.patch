@@ -1,0 +1,31 @@
+From 9f644f19816b7d7053b27bff2ac4ab299ba79e45 Mon Sep 17 00:00:00 2001
+From: Dorian Stoll <dorian.stoll@tmsp.io>
+Date: Thu, 9 Apr 2020 20:16:33 +0200
+Subject: [PATCH] Remove redhat specific settings
+
+Signed-off-by: Dorian Stoll <dorian.stoll@tmsp.io>
+---
+ gnulib-tool | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gnulib-tool b/gnulib-tool
+index c7cb94736..4b48c699e 100755
+--- a/gnulib-tool
++++ b/gnulib-tool
+@@ -3765,12 +3765,12 @@ func_emit_lib_Makefile_am ()
+   if test -z "$makefile_name"; then
+     echo
+     echo "AM_CPPFLAGS =$cppflags_part1$cppflags_part2"
+-    echo "AM_CFLAGS = \$(HOST_CFLAGS) -fexceptions -fstack-protector-strong -fno-strict-aliasing -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -Wp,-D_GLIBCXX_ASSERTIONS -Wp,-DGNULIB_STRICT_CHECKING=1 -W -Wall -Wextra -Wno-undef -Wno-missing-field-initializers -Wno-unused-parameter -Werror -Wno-error=vla -Wno-error=type-limits -Werror=format-security -Werror=trampolines -Wno-error=format-nonliteral -Wno-error=cast-align "
++    echo "AM_CFLAGS = \$(HOST_CFLAGS) -fexceptions -fstack-protector-strong -fno-strict-aliasing -Wp,-D_GLIBCXX_ASSERTIONS -Wp,-DGNULIB_STRICT_CHECKING=1 -W -Wall -Wextra -Wno-undef -Wno-missing-field-initializers -Wno-unused-parameter -Werror -Wno-error=vla -Wno-error=type-limits -Werror=format-security -Werror=trampolines -Wno-error=format-nonliteral -Wno-error=cast-align "
+   else
+     if test -n "$cppflags_part1$cppflags_part2"; then
+       echo
+       echo "AM_CPPFLAGS +=$cppflags_part1$cppflags_part2"
+-      echo "AM_CFLAGS = \$(HOST_CFLAGS) -fexceptions -fstack-protector-strong -fno-strict-aliasing -specs=/usr/lib/rpm/redhat/redhat-hardened-cc1 -specs=/usr/lib/rpm/redhat/redhat-annobin-cc1 -Wp,-D_GLIBCXX_ASSERTIONS -Wp,-DGNULIB_STRICT_CHECKING=1 -W -Wall -Wextra -Wno-undef -Wno-missing-field-initializers -Wno-unused-parameter -Werror -Wno-error=vla -Wno-error=type-limits -Werror=format-security -Werror=trampolines -Wno-error=format-nonliteral -Wno-error=cast-align "
++      echo "AM_CFLAGS = \$(HOST_CFLAGS) -fexceptions -fstack-protector-strong -fno-strict-aliasing -Wp,-D_GLIBCXX_ASSERTIONS -Wp,-DGNULIB_STRICT_CHECKING=1 -W -Wall -Wextra -Wno-undef -Wno-missing-field-initializers -Wno-unused-parameter -Werror -Wno-error=vla -Wno-error=type-limits -Werror=format-security -Werror=trampolines -Wno-error=format-nonliteral -Wno-error=cast-align "
+     fi
+   fi
+   echo
+--
+2.26.0

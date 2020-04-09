@@ -1,0 +1,56 @@
+From 8338d779a75deac101c4cc626a31533ae70c384e Mon Sep 17 00:00:00 2001
+From: Eli Schwartz <eschwartz@archlinux.org>
+Date: Wed, 16 Oct 2019 23:03:06 -0400
+Subject: [PATCH] grub-mkconfig: Use portable "command -v" to detect installed
+ programs
+
+The "which" utility is not guaranteed to be installed either, and if it
+is, its behavior is not portable either.
+
+Conversely, the "command -v" shell builtin is required to exist in all
+POSIX 2008 compliant shells, and is thus guaranteed to work everywhere.
+
+Examples of open-source shells likely to be installed as /bin/sh on
+Linux, which implement the 11-year-old standard: ash, bash, busybox,
+dash, ksh, mksh and zsh.
+
+A side benefit of using the POSIX portable option is that it requires
+neither an external disk executable, nor (because unlike "which", the
+exit code is reliable) a subshell fork. This therefore represents a mild
+speedup.
+
+Signed-off-by: Eli Schwartz <eschwartz@archlinux.org>
+Reviewed-by: Daniel Kiper <daniel.kiper@oracle.com>
+---
+ util/grub-mkconfig_lib.in   | 2 +-
+ util/grub.d/30_os-prober.in | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/util/grub-mkconfig_lib.in b/util/grub-mkconfig_lib.in
+index bc11df2bd..44faf44b5 100644
+--- a/util/grub-mkconfig_lib.in
++++ b/util/grub-mkconfig_lib.in
+@@ -40,7 +40,7 @@ if test "x$grub_rpm_sort" = x; then
+   grub_rpm_sort="${sbindir}/@grub_rpm_sort@"
+ fi
+
+-if which gettext >/dev/null 2>/dev/null; then
++if command -v gettext >/dev/null; then
+   :
+ else
+   gettext () {
+diff --git a/util/grub.d/30_os-prober.in b/util/grub.d/30_os-prober.in
+index ab634393a..5a5436f3c 100644
+--- a/util/grub.d/30_os-prober.in
++++ b/util/grub.d/30_os-prober.in
+@@ -30,7 +30,7 @@ if [ "x${GRUB_DISABLE_OS_PROBER}" = "xtrue" ]; then
+   exit 0
+ fi
+
+-if [ -z "`which os-prober 2> /dev/null`" ] || [ -z "`which linux-boot-prober 2> /dev/null`" ] ; then
++if ! command -v os-prober > /dev/null || ! command -v linux-boot-prober > /dev/null ; then
+   # missing os-prober and/or linux-boot-prober
+   exit 0
+ fi
+--
+2.26.0
