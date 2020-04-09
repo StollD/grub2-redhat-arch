@@ -278,6 +278,24 @@ _package_grub-common_and_bios() {
 
 	echo "Install /usr/bin/grub-redhat-install"
 	install -D -m0755 "${srcdir}/grub-redhat-install" "${pkgdir}/usr/bin/grub-redhat-install"
+
+	echo "Install systemd user service to set the boot_success flag"
+	install -D -m 0755 -t "${pkgdir}/usr/lib/systemd/user/" \
+		"docs/grub-boot-success.service"
+	install -D -m 0755 -t "${pkgdir}/usr/lib/systemd/user/" \
+		"docs/grub-boot-success.timer"
+
+	install -d -m 0755 "${pkgdir}/usr/lib/systemd/user/timers.target.wants"
+	ln -s "../grub-boot-success.timer" \
+		"${pkgdir}/usr/lib/systemd/user/timers.target.wants"
+
+	echo "Install systemd system-update unit to set boot_indeterminate for offline-update"
+	install -D -m 0755 -t "${pkgdir}/usr/lib/systemd/system/" \
+		"docs/grub-boot-indeterminate.service"
+
+	install -d -m 0755 "${pkgdir}/usr/lib/systemd/system/system-update.target.wants"
+	ln -s "../grub-boot-indeterminate.service" \
+		"${pkgdir}/usr/lib/systemd/system/system-update.target.wants"
 }
 
 _package_grub-efi() {
