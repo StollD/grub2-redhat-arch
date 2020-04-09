@@ -1,0 +1,120 @@
+#!/bin/bash
+
+GRUB="$(basename $0 | cut -d'-' -f1)"
+
+PARAMS="$@"
+MODULES=$(echo \
+    all_video \
+    boot \
+    blscfg \
+    btrfs \
+    cat \
+    configfile \
+    cryptodisk \
+    echo \
+    efi_netfs \
+    efifwsetup \
+    efinet \
+    ext2 \
+    fat \
+    font \
+    gcry_rijndael \
+    gcry_rsa \
+    gcry_serpent \
+    gcry_sha256 \
+    gcry_twofish \
+    gcry_whirlpool \
+    gfxmenu \
+    gfxterm \
+    gzio \
+    halt \
+    hfsplus \
+    http \
+    increment \
+    iso9660 \
+    jpeg \
+    loadenv \
+    loopback \
+    linux \
+    lvm \
+    lsefi \
+    lsefimmap \
+    luks \
+    mdraid09 \
+    mdraid1x \
+    minicmd \
+    net \
+    normal \
+    part_apple \
+    part_msdos \
+    part_gpt \
+    password_pbkdf2 \
+    pgp png reboot \
+    regexp \
+    search \
+    search_fs_uuid \
+    search_fs_file \
+    search_label \
+    serial \
+    sleep \
+    syslinuxcfg \
+    test \
+    tftp \
+    version \
+    video \
+    xfs \
+    zstd \
+)
+
+USERMODULES=""
+TARGET_IS_EFI=0
+TARGET_FOUND=0
+
+while getopts ":-:" args; do
+    case "$args" in
+    -)
+        case "$OPTARG" in
+            modules)
+                USERMODULES="${!OPTIND}"
+                OPTIND="$((OPTIND+1))"
+                ;;
+            modules=*)
+                USERMODULES="${OPTARG#*=}"
+                ;;
+            target)
+                if echo "${!OPTIND}" | grep -qi 'efi'; then
+                    TARGET_IS_EFI=1
+                fi
+                OPTIND="$((OPTIND+1))"
+                TARGET_FOUND=1
+                ;;
+            target=*)
+                if echo "${OPTARG#*=}" | grep -qi 'efi'; then
+                    TARGET_IS_EFI=1
+                fi
+                TARGET_FOUND=1
+                ;;
+        esac
+    esac
+done
+shift $((OPTIND-1))
+
+# Check default installation target
+if [ "$TARGET_FOUND" = "0" ] && $GRUB-install --help | grep -qiE '\[default=.*efi.*]'; then
+    TARGET_IS_EFI=1
+fi
+
+PARAMS="$(echo " $PARAMS" | sed "s| --modules.$USERMODULES||g" | sed 's|^ ||g')"
+if [ "$TARGET_IS_EFI" = "1" ]; then
+    MODULES="$USERMODULES $MODULES"
+else
+    MODULES="$USERMODULES"
+fi
+
+if [ ! "$MODULES" = "" ]; then
+    PARAMS="$PARAMS --modules\"$MODULES\""
+fi
+
+$GRUB-install $PARAMS \
+    2> >(sed "s|$GRUB-install|$GRUB-redhat-install|g") \
+    1> >(sed "s|$GRUB-install|$GRUB-redhat-install|g")

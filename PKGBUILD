@@ -67,6 +67,7 @@ source=("grub::git+https://github.com/rhboot/grub2.git#commit=${_GRUB_REDHAT_COM
 	'9997-Remove-redhat-specific-settings.patch'
 	'9998-Fix_disabling_gnus-rpm-sort.patch'
 	'9999-grub-mkconfig-Use-portable-command-v-to-detect-insta.patch'
+	'grub-redhat-install'
         'grub.default')
 
 sha256sums=('SKIP'
@@ -79,6 +80,7 @@ sha256sums=('SKIP'
 	    'd097165b023b8ca266218c37c67547280c1a6331f13b5e91e900b27a13f870fc'
 	    '348c06275d2695b1e1e6d1a055d899c7843bad451d67dacda0afe289eab96766'
 	    '7c076eb9a5c205e6263522516778b22a85a021b2811c79cbef7152d0ae933013'
+	    '960158ac6632d2856debab26f7ac3491a2b379daee943a41a0d24e90f197479f'
 	    '690adb7943ee9fedff578a9d482233925ca3ad3e5a50fffddd27cf33300a89e3')
 
 _configure_options=(
@@ -273,6 +275,9 @@ _package_grub-common_and_bios() {
 
 	echo "Install /etc/default/grub (used by grub-mkconfig)..."
 	install -D -m0644 "${srcdir}/grub.default" "${pkgdir}/etc/default/grub"
+
+	echo "Install /usr/bin/grub-redhat-install"
+	install -D -m0755 "${srcdir}/grub-redhat-install" "${pkgdir}/usr/bin/grub-redhat-install"
 }
 
 _package_grub-efi() {
